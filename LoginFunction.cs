@@ -60,22 +60,6 @@ namespace KomitWap
                     log.LogCritical("Komit Login -> User Request: {0}. Response {1}.", user.UserId, response.StatusCode);
                     return new BadRequestObjectResult($"User, Id: {user.UserId} processed unsuccessfully.");
                 }
-
-                // var stream = await response.Content.ReadAsStreamAsync();
-
-                // var soapResponse = XDocument.Load(stream);
-
-                // using (var xmlReader = soapResponse.CreateReader())
-                // {
-                //     xmlDocument.Load(xmlReader);
-                // }
-
-                // var createContactResponse = xmlDocument.GetElementsByTagName("NS1:CreateContactResp");
-
-                // if (createContactResponse.Count == 0)
-                // {
-                //     log.LogCritical("Komit Login -> User Request: {0}. Response {1}.", user.UserId, response.StatusCode);
-                // }
             }
             catch (AggregateException ex)
             {
