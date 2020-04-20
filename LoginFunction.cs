@@ -39,6 +39,8 @@ namespace KomitWap
                 
                 user = JsonSerializer.Deserialize<User>(requestBody, options);
 
+                //TODO: Aqui se hara la parte de la llamada para obtener el apellido meterno
+
                 // Request for Liverpool Person Sercice
                 log.LogInformation("Komit Login -> User try request: {0}.", user.UserId);
 
