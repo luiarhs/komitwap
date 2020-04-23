@@ -57,10 +57,11 @@ namespace KomitWap
                     };
                     Cloud4WiRequest.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                     cloud4wi.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
                     var cloud4wiResponse = await cloud4wi.SendAsync(Cloud4WiRequest);
+
                     JObject userCloud4Wi = JObject.Parse(await cloud4wiResponse.Content.ReadAsStringAsync());
-                    var lastSecondName = ((string)userCloud4Wi["data"]["lastName"]).Split(" ")[1];
-                    user.LastName = user.LastName + " " + lastSecondName;
+                    user.MiddleName = ((string)userCloud4Wi["data"]["personalId"]).Split(" ")[1];
                 }
                 catch (Exception e)
                 {
@@ -132,7 +133,7 @@ namespace KomitWap
                             "<Contact>" +
                                 $"<FirstName>{user.FirstName ?? String.Empty}</FirstName>" +
                                 $"<LastName>{user.LastName ?? String.Empty}</LastName>" +
-                                "<MiddleName></MiddleName>" +
+                                $"<MiddleName>{user.MiddleName ?? String.Empty}</MiddleName>" +
                                 $"<MF>{user.Gender}</MF>" +
                                 $"<BirthDate>{user.BirthDate}</BirthDate>" +
                                 "<SocialSecurityNumber></SocialSecurityNumber>" +
