@@ -46,7 +46,7 @@ namespace KomitWap
                 user = JsonSerializer.Deserialize<User>(requestBody, options);
 
                 try{
-                    cloud4wi.BaseAddress = new Uri(cloud4wi.BaseAddress.OriginalString.Replace("{}", "0efa10594b4772ca44986c2b4978b5e1"));
+                    cloud4wi.BaseAddress = new Uri(cloud4wi.BaseAddress.OriginalString.Replace("{}", user.UserId));
 
                     var Cloud4WiRequest = new HttpRequestMessage{
                         Method = HttpMethod.Post,
