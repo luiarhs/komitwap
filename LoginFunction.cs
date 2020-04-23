@@ -12,6 +12,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 
 namespace KomitWap
 {
@@ -19,6 +20,11 @@ namespace KomitWap
     {
         private static HttpClient httpClient = new HttpClient{
             BaseAddress = new Uri("https://brokerqamdm.liverpool.com.mx/wbi/wbi_personService")
+        };
+
+        private static HttpClient cloud4wi = new HttpClient
+        {
+            BaseAddress = new Uri("https://api.cloud4wi.com/v2/users/findById?id={}&api_version=v2.0&api_key=bdd9d8f565bd9983c5a024ced7218cc6&api_secret=3ff4a659cfe4ca4238c5baa4cbd196ed")
         };
 
         [FunctionName("LoginFunction")]
@@ -39,7 +45,28 @@ namespace KomitWap
                 
                 user = JsonSerializer.Deserialize<User>(requestBody, options);
 
-                //TODO: Aqui se hara la parte de la llamada para obtener el apellido meterno
+
+                try
+                {
+                    cloud4wi.BaseAddress = new Uri(cloud4wi.BaseAddress.OriginalString.Replace("{}", "0efa10594b4772ca44986c2b4978b5e1"));
+
+                    var Cloud4WiRequest = new HttpRequestMessage
+                    {
+                        Method = HttpMethod.Post,
+                        Content = new StringContent("", Encoding.UTF8, "application/json")
+                    };
+                    Cloud4WiRequest.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                    cloud4wi.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    var cloud4wiResponse = await cloud4wi.SendAsync(Cloud4WiRequest);
+                    JObject userCloud4Wi = JObject.Parse(await cloud4wiResponse.Content.ReadAsStringAsync());
+                    var lastSecondName = ((string)userCloud4Wi["data"]["lastName"]).Split(" ")[1];
+                    user.LastName = user.LastName + " " + lastSecondName;
+                }
+                catch (Exception e)
+                {
+                    log.LogCritical(e.Message);
+                    log.LogCritical("Error while trying to get user second last name from cloud4Wi");
+                }
 
                 // Request for Liverpool Person Sercice
                 log.LogInformation("Komit Login -> User try request: {0}.", user.UserId);
