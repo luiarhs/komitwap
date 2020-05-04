@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -22,7 +21,7 @@ namespace KomitWap
             BaseAddress = new Uri("https://brokerqamdm.liverpool.com.mx/wbi/wbi_personService")
         };
 
-        private static HttpClient cloud4wi = new HttpClient{
+        private static HttpClient cloud4wi = new HttpClient {
             BaseAddress = new Uri("https://api.cloud4wi.com/v2/users/findById?id={}&api_version=v2.0&api_key=bdd9d8f565bd9983c5a024ced7218cc6&api_secret=3ff4a659cfe4ca4238c5baa4cbd196ed")
         };
 
@@ -41,26 +40,28 @@ namespace KomitWap
                 var options = new JsonSerializerOptions {
                     PropertyNameCaseInsensitive = true,
                 };
-                
 
                 user = JsonSerializer.Deserialize<User>(requestBody, options);
 
-                try{
+                try
+                {
                     cloud4wi.BaseAddress = new Uri(cloud4wi.BaseAddress.OriginalString.Replace("{}", user.UserId));
 
-                    var Cloud4WiRequest = new HttpRequestMessage{
+                    var Cloud4WiRequest = new HttpRequestMessage {
                         Method = HttpMethod.Post,
                         Content = new StringContent("", Encoding.UTF8, "application/json")
                     };
                     Cloud4WiRequest.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                     cloud4wi.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
                     var cloud4wiResponse = await cloud4wi.SendAsync(Cloud4WiRequest);
+
                     JObject userCloud4Wi = JObject.Parse(await cloud4wiResponse.Content.ReadAsStringAsync());
-                    var lastSecondName = ((string)userCloud4Wi["data"]["lastName"]).Split(" ")[1];
-                    user.LastName = user.LastName + " " +lastSecondName;
-                } catch (Exception e) {
-                    log.LogCritical(e.Message);
-                    log.LogCritical("Error while trying to get user second last name from cloud4Wi");
+                    user.MiddleName = ((string)userCloud4Wi["data"]["personalId"]).Split(" ")[1];
+                }
+                catch (Exception e)
+                {
+                    log.LogCritical("Error while trying to get user second last name from cloud4Wi. Exception: {0}", e.Message);
                 }
 
                 // Request for Liverpool Person Sercice
@@ -68,7 +69,6 @@ namespace KomitWap
 
                 var xmlDocument = new XmlDocument();
                 var soapRequest = GetXmlStringRequest(user);
-
 
                 var request = new HttpRequestMessage() {
                     Method = HttpMethod.Post,
@@ -84,22 +84,6 @@ namespace KomitWap
                     log.LogCritical("Komit Signup -> User Request: {0}. Response {1}.", user.UserId, response.StatusCode);
                     return new BadRequestObjectResult($"User, Id: {user.UserId} processed unsuccessfully.");
                 }
-
-                // var stream = await response.Content.ReadAsStreamAsync();
-
-                // var soapResponse = XDocument.Load(stream);
-
-                // using (var xmlReader = soapResponse.CreateReader())
-                // {
-                //     xmlDocument.Load(xmlReader);
-                // }
-
-                // var createContactResponse = xmlDocument.GetElementsByTagName("NS1:CreateContactResp");
-
-                // if (createContactResponse.Count == 0)
-                // {
-                //     log.LogCritical("Komit Signup -> User Request: {0}. Response {1}.", user.UserId, response.StatusCode);
-                // }
             }
             catch (AggregateException ex)
             {
@@ -143,7 +127,7 @@ namespace KomitWap
                             "<Contact>" +
                                 $"<FirstName>{user.FirstName ?? String.Empty}</FirstName>" +
                                 $"<LastName>{user.LastName ?? String.Empty}</LastName>" +
-                                "<MiddleName></MiddleName>" +
+                                $"<MiddleName>{user.MiddleName ?? String.Empty}</MiddleName>" +
                                 $"<MF>{user.Gender}</MF>" +
                                 $"<BirthDate>{user.BirthDate}</BirthDate>" +
                                 "<SocialSecurityNumber></SocialSecurityNumber>" +
