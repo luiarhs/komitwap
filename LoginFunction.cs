@@ -17,13 +17,11 @@ namespace KomitWap
 {
     public static class LoginFunction
     {
-        private static HttpClient httpClient = new HttpClient{
+        private static HttpClient liverpool = new HttpClient{
             BaseAddress = new Uri("https://brokerqamdm.liverpool.com.mx/wbi/wbi_personService")
         };
 
-        private static HttpClient cloud4wi = new HttpClient {
-            BaseAddress = new Uri("https://api.cloud4wi.com/v2/users/findById?id={}&api_version=v2.0&api_key=bdd9d8f565bd9983c5a024ced7218cc6&api_secret=3ff4a659cfe4ca4238c5baa4cbd196ed")
-        };
+        private static HttpClient cloud4wi = new HttpClient { };
 
         [FunctionName("LoginFunction")]
         public static async Task<IActionResult> Run(
@@ -45,7 +43,10 @@ namespace KomitWap
 
                 try
                 {
-                    cloud4wi.BaseAddress = new Uri(cloud4wi.BaseAddress.OriginalString.Replace("{}", user.UserId));
+                    cloud4wi.BaseAddress =
+                        new Uri(
+                            $"https://api.cloud4wi.com/v2/users/findById?id={user.UserId}&api_version=v2.0&api_key=bdd9d8f565bd9983c5a024ced7218cc6&api_secret=3ff4a659cfe4ca4238c5baa4cbd196ed"
+                        );
 
                     var Cloud4WiRequest = new HttpRequestMessage {
                         Method = HttpMethod.Post,
@@ -57,7 +58,7 @@ namespace KomitWap
                     var cloud4wiResponse = await cloud4wi.SendAsync(Cloud4WiRequest);
 
                     JObject userCloud4Wi = JObject.Parse(await cloud4wiResponse.Content.ReadAsStringAsync());
-                    user.MiddleName = ((string)userCloud4Wi["data"]["personalId"]).Split(" ")[1];
+                    user.MiddleName = ((string)userCloud4Wi["data"]["personalId"]);
                 }
                 catch (Exception e)
                 {
@@ -76,9 +77,9 @@ namespace KomitWap
                 };
 
                 request.Content.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
-                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
+                liverpool.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
 
-                var response = await httpClient.SendAsync(request);
+                var response = await liverpool.SendAsync(request);
 
                 if (!response.IsSuccessStatusCode) {
                     log.LogCritical("Komit Login -> User Request: {0}. Response {1}.", user.UserId, response.StatusCode);
