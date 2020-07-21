@@ -18,7 +18,7 @@ namespace KomitWap
     public static class LoginFunction
     {
         private static HttpClient liverpool = new HttpClient{
-            BaseAddress = new Uri("https://brokerqamdm.liverpool.com.mx/wbi/wbi_personService")
+            BaseAddress = new Uri("https://brokermdm.liverpool.com.mx/wbi/wbi_personService")
         };
 
         private static HttpClient cloud4wi = new HttpClient { };
@@ -62,7 +62,8 @@ namespace KomitWap
                 }
                 catch (Exception e)
                 {
-                    log.LogCritical("Error while trying to get user second last name from cloud4Wi. Exception: {0}", e.Message);
+                    log.LogCritical("Error while trying to get user {0} second last name from cloud4Wi. Exception: {0}",user.UserId, e.Message);
+                    return new UnprocessableEntityObjectResult($"User, Id: {user.UserId} processed unsuccessfully.");
                 }
 
                 // Request for Liverpool Person Sercice
